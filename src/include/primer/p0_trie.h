@@ -77,7 +77,7 @@ class TrieNode {
    *
    * @return True if this trie node has any child node, false if it has no child node.
    */
-  bool HasChildren() const { return children_.size() >= 1; }
+  bool HasChildren() const { return children_.size() > 0; }
 
   /**
    * TODO(P0): Add implementation
@@ -216,7 +216,10 @@ class TrieNodeWithValue : public TrieNode {
    * @param trieNode TrieNode whose data is to be moved to TrieNodeWithValue
    * @param value
    */
-  TrieNodeWithValue(TrieNode &&trieNode, T value) {}
+  TrieNodeWithValue(TrieNode &&trieNode, T value) :  TrieNode(std::move(trieNode)), value_ (value)  {
+
+    is_end_  =true;
+  }
 
   /**
    * TODO(P0): Add implementation
@@ -231,7 +234,10 @@ class TrieNodeWithValue : public TrieNode {
    * @param key_char Key char of this node
    * @param value Value of this node
    */
-  TrieNodeWithValue(char key_char, T value) {}
+  TrieNodeWithValue(char key_char, T value) :  TrieNode(key_char), value_ (value) {
+
+    is_end_  =true;
+  }
 
   /**
    * @brief Destroy the Trie Node With Value object
