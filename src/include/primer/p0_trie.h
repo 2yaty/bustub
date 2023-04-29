@@ -77,7 +77,7 @@ class TrieNode {
    *
    * @return True if this trie node has any child node, false if it has no child node.
    */
-  bool HasChildren() const { return children_.size() > 1; }
+  bool HasChildren() const { return children_.size() >= 1; }
 
   /**
    * TODO(P0): Add implementation
@@ -148,7 +148,15 @@ class TrieNode {
    * @return Pointer to unique_ptr of the child node, nullptr if child
    *         node does not exist.
    */
-  std::unique_ptr<TrieNode> *GetChildNode(char key_char) { return &children_[key_char]; }
+  std::unique_ptr<TrieNode> *GetChildNode(char key_char) { 
+
+    if(HasChild(key_char)){
+      return &children_[key_char];
+    }
+    else {
+      return nullptr;
+    }
+  }
 
   /**
    * TODO(P0): Add implementation
