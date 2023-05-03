@@ -50,8 +50,11 @@ class TrieNode {
   TrieNode(TrieNode &&other_trie_node) noexcept {
 
     key_char_ = other_trie_node.key_char_;
-  is_end_ = other_trie_node.is_end_;
-  children_ = std::move(other_trie_node.children_);
+    is_end_ = other_trie_node.is_end_;
+    for(auto &child : other_trie_node.children_){
+      this->children_.emplace(child.first , std::move(child.second));
+    }
+    other_trie_node.children_.clear();
   }
 
   /**
@@ -67,7 +70,7 @@ class TrieNode {
    * @param key_char Key char of child node.
    * @return True if this trie node has a child with given key, false otherwise.
    */
-  bool HasChild(char key_char) const { return children_.count(key_char); }
+  bool HasChild(char key_char) const { return children_.count(key_char)>0; }
 
   /**
    * TODO(P0): Add implementation
@@ -270,21 +273,21 @@ class Trie {
    * @brief Construct a new Trie object. Initialize the root node with '\0'
    * character.
    */
-  Trie() = default;
+  Trie(): root_(std::make_unique<TrieNode>('\0')) {}
 
   /**
    * TODO(P0): Add implementation
    *
    * @brief Insert key-value pair into the trie.
    *
-   * If the key is an empty string, return false immediately.
+   * If the key is an empty string, return false immediately.^^^^^^
    *
    * If the key already exists, return false. Duplicated keys are not allowed and
    * you should never overwrite value of an existing key.
    *
    * When you reach the ending character of a key:
    * 1. If TrieNode with this ending character does not exist, create new TrieNodeWithValue
-   * and add it to parent node's children_ map.
+   * and add it to parent node's children_ map.^^^^^^^^^^^
    * 2. If the terminal node is a TrieNode, then convert it into TrieNodeWithValue by
    * invoking the appropriate constructor.
    * 3. If it is already a TrieNodeWithValue,
@@ -300,6 +303,57 @@ class Trie {
    */
   template <typename T>
   bool Insert(const std::string &key, T value) {
+
+    if (key.empty())                        /*checking if it's empty*/
+    {
+      return false;
+    }
+
+    auto node = root_.get();
+
+
+    for(int i =0 ; i < int(key.length()) ; i++){
+      char c = key[i];
+
+      if (!node->HasChild(c))               /*checking if trie node with this value exist or not ----> first condition*/
+      {
+        if (i == int(key.size())-1)              /*if it's the last node add it with value */
+        {
+          node->InsertChildNode(c , std::make_unique<TrieNodeWithValue<T>>(c , value));
+          auto tempNode = node->GetChildNode(c)->get();
+          tempNode->SetEndNode(true);
+          return true ;
+        }
+        
+        node->InsertChildNode(c , std::make_unique<TrieNode>(c));
+      }
+      else{
+        if (i == int(key.size())-1 )            
+        {
+          auto tempNode = node->GetChildNode(c)->get();
+          if (tempNode->IsEndNode())             /*checking If the terminal node is a TrieNodeWithValue -----> second condition */
+          {
+            return false;                    /*doing the third condition*/
+          }
+          else {                              
+            
+            node->RemoveChildNode(c);
+            node->InsertChildNode(c , std::make_unique<TrieNodeWithValue<T>>( std::move(*tempNode) , value));
+            tempNode = node->GetChildNode(c)->get();
+            tempNode->SetEndNode(true);
+            //TODO: make it end "send true to IsEnd"
+            return true;
+          }
+          
+        }
+        
+      }
+
+      node = node->GetChildNode(c)->get();
+
+    }
+    
+
     return false;
   }
 
@@ -342,8 +396,45 @@ class Trie {
    */
   template <typename T>
   T GetValue(const std::string &key, bool *success) {
-    *success = false;
-    return {};
+
+    if (key.empty())
+    {
+      *success = false;
+      return T{};
+    }
+    
+
+    auto node = root_.get();
+
+    for(char c : key){
+
+      if (!node->HasChild(c))
+      {
+        *success = false;
+        return T{};
+      }
+      
+      node = node->GetChildNode(c)->get();
+    }
+
+
+    if (!node->IsEndNode())
+    {
+      *success = false;
+      return T{};
+    }
+    
+
+
+    if  (auto value_node = dynamic_cast<TrieNodeWithValue<T>*>(node)) {
+        *success = true;
+        return value_node->GetValue();
+    } else {
+        *success = false;
+        return T{};
+    }
+
+    
   }
 };
 }  // namespace bustub
