@@ -309,6 +309,9 @@ class Trie {
       return false;
     }
 
+    // latch_.RLock();
+    latch_.WLock();
+
     auto node = root_.get();
 
 
@@ -322,6 +325,9 @@ class Trie {
           node->InsertChildNode(c , std::make_unique<TrieNodeWithValue<T>>(c , value));
           auto tempNode = node->GetChildNode(c)->get();
           tempNode->SetEndNode(true);
+
+          // latch_.RUnlock();
+          latch_.WUnlock();
           return true ;
         }
         
@@ -333,6 +339,8 @@ class Trie {
           auto tempNode = node->GetChildNode(c)->get();
           if (tempNode->IsEndNode())             /*checking If the terminal node is a TrieNodeWithValue -----> second condition */
           {
+            // latch_.RUnlock();
+          latch_.WUnlock();
             return false;                    /*doing the third condition*/
           }
           else {                              
@@ -341,7 +349,9 @@ class Trie {
             node->InsertChildNode(c , std::make_unique<TrieNodeWithValue<T>>( std::move(*tempNode) , value));
             tempNode = node->GetChildNode(c)->get();
             tempNode->SetEndNode(true);
-            //TODO: make it end "send true to IsEnd"
+            
+            // latch_.RUnlock();
+          latch_.WUnlock();
             return true;
           }
           
@@ -402,19 +412,26 @@ class Trie {
       return false;
     }
 
+    latch_.RLock();
+    // latch_.WLock();
     auto node = root_.get();
 
     for(const char c: key){
       if (!node->HasChild(c))
       {
+        latch_.RUnlock();
         return false;
       }
       node = node->GetChildNode(c)->get();
       
     }
 
+   
+    
     removeNode(root_.get() , key , 0);
     
+    latch_.RUnlock();
+    // latch_.WUnlock();
     return true; }
 
 
