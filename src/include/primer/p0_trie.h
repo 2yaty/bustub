@@ -374,7 +374,49 @@ class Trie {
    * @param key Key used to traverse the trie and find the correct node
    * @return True if the key exists and is removed, false otherwise
    */
-  bool Remove(const std::string &key) { return false; }
+
+  void removeNode (TrieNode* node , const std::string &key  , int index){
+
+    if(index < int(key.size()) -1){
+      removeNode((node->GetChildNode(key[index])->get()) , key , index+1);
+    }
+
+    auto temp = node->GetChildNode(key[index])->get();
+
+    if (temp->HasChildren())
+    {
+      return;
+    }
+
+    node->RemoveChildNode(key[index]);
+    
+
+  }
+
+
+
+  bool Remove(const std::string &key) { 
+    
+    if (key.empty())                        /*checking if it's empty*/
+    {
+      return false;
+    }
+
+    auto node = root_.get();
+
+    for(const char c: key){
+      if (!node->HasChild(c))
+      {
+        return false;
+      }
+      node = node->GetChildNode(c)->get();
+      
+    }
+
+    removeNode(root_.get() , key , 0);
+    
+    return true; }
+
 
   /**
    * TODO(P0): Add implementation
