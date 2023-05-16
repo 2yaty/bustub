@@ -87,17 +87,52 @@ ExtendibleHashTable<K, V>::Bucket::Bucket(size_t array_size, int depth) : size_(
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Bucket::Find(const K &key, V &value) -> bool {
-  UNREACHABLE("not implemented");
+  //UNREACHABLE("not implemented");
+  std::scoped_lock<std::mutex> lock(latch_);
+  bool result = false;
+  for (const auto&obj :list_) {
+    if (obj.first == key) {
+      result = true;
+    }
+  }
+  return result;
 }
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Bucket::Remove(const K &key) -> bool {
-  UNREACHABLE("not implemented");
+//  UNREACHABLE("not implemented");
+  std::scoped_lock<std::mutex> lock(latch_);
+  bool result = false;
+  for (auto const &obj :list_) {
+    if (obj.first == key){
+      list_.remove(obj);
+      result = true;
+    }
+  }
+  return result;
 }
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Bucket::Insert(const K &key, const V &value) -> bool {
-  UNREACHABLE("not implemented");
+//  UNREACHABLE("not implemented");
+  std::scoped_lock<std::mutex> lock(latch_);
+  bool result = false;
+  if (!IsFull()){
+
+    for (auto &obj :list_) {
+      if (obj.first == key){
+        obj.second = value;
+        result = true;
+      }
+    }
+
+    if (!result){
+      list_.push_back(std::pair<K,V>(key , value));
+      result = true;
+    }
+
+  }
+  return result;
 }
 
 template class ExtendibleHashTable<page_id_t, Page *>;

@@ -159,6 +159,8 @@ class ExtendibleHashTable : public HashTable<K, V> {
 
    private:
     // TODO(student): You may add additional private members and helper functions
+    mutable std::mutex latch_;
+
     size_t size_;
     int depth_;
     std::list<std::pair<K, V>> list_;
